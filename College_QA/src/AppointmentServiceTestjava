@@ -1,0 +1,97 @@
+import static org.junit.Assert.*;
+import java.util.Calendar;
+import java.util.Date;
+import org.junit.Before;
+import org.junit.Test;
+
+
+public class AppointmentServiceTest {
+
+    private AppointmentService service;
+
+    private Date future_date() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, 5);
+        return calendar.getTime();
+    }
+
+    @Before
+    public void setUp() {
+        service = new AppointmentService();
+    }
+
+    @Test
+    public void adds_appointment_with_unique_id() {
+        Appointment maxxor = new Appointment("maxxor001", future_date(), "Maxxor defends Kiru City");
+        service.add_appointment(maxxor);
+        assertEquals(1, service.appointment_count());
+        assertNotNull(service.get_appointment("maxxor001"));
+    }
+
+    @Test
+    public void adds_multiple_appointments_with_unique_ids() {
+        service.add_appointment(new Appointment("maxxor001", future_date(), "Maxxor defends Kiru City"));
+        service.add_appointment(new Appointment("chaor0001", future_date(), "Chaor plans UnderWorld raid"));
+        service.add_appointment(new Appointment("najarin01", future_date(), "Najarin studies mugic"));
+        assertEquals(3, service.appointment_count());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rejects_adding_duplicate_appointment_id() {
+        service.add_appointment(new Appointment("tangath01", future_date(), "Tangath Toborn guards the border"));
+        service.add_appointment(new Appointment("tangath01", future_date(), "Tangath Toborn joins the charge"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rejects_adding_null_appointment() {
+        service.add_appointment(null);
+    }
+
+    @Test
+    public void deletes_appointment_by_id() {
+        service.add_appointment(new Appointment("heptadd01", future_date(), "Heptadd summons the Cothica"));
+        assertEquals(1, service.appointment_count());
+        service.delete_appointment("heptadd01");
+        assertEquals(0, service.appointment_count());
+        assertNull(service.get_appointment("heptadd01"));
+    }
+
+    @Test
+    public void deletes_only_the_targeted_appointment() {
+        service.add_appointment(new Appointment("ulmar0001", future_date(), "Ulmar forges new battlegear"));
+        service.add_appointment(new Appointment("takinom01", future_date(), "Takinom rallies the hive"));
+        service.delete_appointment("ulmar0001");
+        assertEquals(1, service.appointment_count());
+        assertNotNull(service.get_appointment("takinom01"));
+        assertNull(service.get_appointment("ulmar0001"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rejects_deleting_nonexistent_appointment_id() {
+        service.delete_appointment("vanbloot01");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void rejects_deleting_null_appointment_id() {
+        service.delete_appointment(null);
+    }
+
+    @Test
+    public void adding_and_deleting_same_id_keeps_service_consistent() {
+        service.add_appointment(new Appointment("cromaxx1", future_date(), "cromaxx holds the line"));
+        service.delete_appointment("cromaxx1");
+        service.add_appointment(new Appointment("cromaxx1", future_date(), "cromaxx rejoins the front"));
+        assertEquals(1, service.appointment_count());
+        assertNotNull(service.get_appointment("cromaxx1"));
+    }
+
+    @Test
+    public void get_appointment_returns_null_for_unknown_id() {
+        assertNull(service.get_appointment("rarran001"));
+    }
+
+    @Test
+    public void new_service_starts_empty() {
+        assertEquals(0, service.appointment_count());
+    }
+}
